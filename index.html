@@ -3,10 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Ask why an open-source repo changed. Semantic search over its PRs, issues and commits, running entirely in your browser." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%232f5bd3'/%3E%3Ctext x='16' y='22.5' text-anchor='middle' font-family='system-ui,sans-serif' font-size='18' font-weight='700' fill='white'%3E%3F%3C/text%3E%3C/svg%3E" />
     <title>git-why</title>
   </head>
   <body>
-    <div id="app"></div>
+    <main class="page">
+      <header class="masthead">
+        <h1>git-why</h1>
+        <p class="tagline">
+          Ask why <a id="repo-link" target="_blank" rel="noopener"></a> changed. Results link to the PRs, issues and commits
+          behind it. Everything runs in your browser: no server, no API key.
+        </p>
+      </header>
+
+      <div id="warning" class="warning" role="alert" hidden></div>
+
+      <form id="search" class="search" role="search">
+        <input id="q" type="search" name="q" autocomplete="off" aria-label="Your question" placeholder="Why was the default patch size changed?" />
+        <button type="submit">Search</button>
+      </form>
+      <div id="examples" class="examples" aria-label="Example questions"></div>
+
+      <fieldset id="filters" class="filters">
+        <legend class="visually-hidden">Filters</legend>
+        <span class="filter-group">
+          <label><input type="checkbox" name="type" value="pr" checked /> PRs</label>
+          <label><input type="checkbox" name="type" value="issue" checked /> Issues</label>
+          <label><input type="checkbox" name="type" value="commit" checked /> Commits</label>
+        </span>
+        <span class="filter-group">
+          <label>From <input type="date" name="from" /></label>
+          <label>To <input type="date" name="to" /></label>
+        </span>
+        <label class="file-filter">File <input type="text" name="file" placeholder="e.g. planner" autocomplete="off" /></label>
+      </fieldset>
+
+      <div class="status" role="status" aria-live="polite">
+        <span id="status-text"></span>
+        <progress id="progress" max="1" hidden></progress>
+      </div>
+
+      <ol id="results" class="results"></ol>
+
+      <footer id="footer" class="footer"></footer>
+    </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
