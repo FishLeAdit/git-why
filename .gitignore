@@ -1,0 +1,15 @@
+node_modules
+dist
+*.local
+*.log
+
+# secrets
+.env
+
+# raw fetch cache (large, regenerable)
+data/raw
+
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json

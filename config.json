@@ -1,0 +1,13 @@
+{
+  "owner": "MIC-DKFZ",
+  "repo": "nnUNet",
+  "since": null,
+  "maxItems": null,
+  "model": "Xenova/bge-small-en-v1.5",
+  "dtype": "q8",
+  "topK": 10,
+  "noise": {
+    "botAuthors": ["dependabot[bot]", "github-actions[bot]", "pre-commit-ci[bot]"],
+    "skipSubjects": ["^Merge (branch|remote-tracking branch) ", "^(bump|release) (version )?v?\\d", "^v?\\d+\\.\\d+(\\.\\d+)?$"]
+  }
+}

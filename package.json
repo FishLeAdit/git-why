@@ -1,0 +1,21 @@
+{
+  "name": "git-why",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "fetch": "node --env-file-if-exists=.env --experimental-strip-types --disable-warning=ExperimentalWarning scripts/fetch.mjs",
+    "index": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/build-index.mjs",
+    "eval": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/eval.mjs"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
+  }
+}
