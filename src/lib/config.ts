@@ -14,6 +14,9 @@ export type RepoConfig = {
   since: string | null; // ISO date; only fetch history after this
   maxItems: number | null; // cap per item type, for small first runs
   examples: string[]; // example questions shown in the UI
+  // Below this top dense cosine, the answer step should say the history doesn't explain the question.
+  // Measured by `npm run eval` (eval/results.md); null where no eval has been run for this repo.
+  answerThreshold: number | null;
   noise?: Partial<NoiseRules>; // added to the global rules (lists are extended, not replaced)
 };
 

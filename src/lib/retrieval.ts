@@ -1,5 +1,6 @@
 // Index loading and search. Isomorphic: used by the browser app, the eval and the Node query script.
 // Callers do the I/O (fetch or fs) and hand the raw contents in.
+import MiniSearch from 'minisearch';
 import { EMBED_DIM, EMBED_DTYPE, EMBED_MODEL, EMBED_POOLING } from './config.ts';
 
 export type Chunk = {
@@ -64,6 +65,64 @@ export function matchesFilters(chunk: Chunk, filters: Filters): boolean {
   }
   return true;
 }
+
+// ---------- keyword search (BM25 via MiniSearch) ----------
+
+// Words that carry no signal in "why was the … changed?" questions. Without this list nearly every
+// record matches "why", "was" and "the", and BM25 rewards whichever repeats them most.
+const STOP_WORDS = new Set(
+  'a an and are as at be been but by can could did do does for from had has have how i if in into is it its of on or should so than that the their them then there these they this to was we were what when where which who why will with would you'.split(' '),
+);
+
+export type KeywordIndex = { search: MiniSearch<Chunk>; byId: Map<string, Chunk> };
+
+export function buildKeywordIndex(chunks: Chunk[]): KeywordIndex {
+  const search = new MiniSearch<Chunk>({
+    fields: ['title', 'text', 'files'],
+    // File paths split on "/", "_" and "." too, so "default_experiment_planner.py" matches "planner".
+    extractField: (chunk, field) => (field === 'files' ? chunk.files.join(' ') : chunk[field as 'title' | 'text']),
+    processTerm: (term) => {
+      const t = term.toLowerCase();
+      return t.length < 2 || STOP_WORDS.has(t) ? null : t;
+    },
+    searchOptions: { boost: { title: 2 } },
+  });
+  search.addAll(chunks);
+  return { search, byId: new Map(chunks.map((c) => [c.id, c])) };
+}
+
+export function searchKeyword(keyword: KeywordIndex, query: string, k: number, filters: Filters = {}): Hit[] {
+  const hits: Hit[] = [];
+  for (const result of keyword.search.search(query)) {
+    const chunk = keyword.byId.get(result.id)!;
+    if (!matchesFilters(chunk, filters)) continue;
+    hits.push({ chunk, score: result.score });
+    if (hits.length === k) break;
+  }
+  return hits;
+}
+
+// Reciprocal rank fusion (Cormack, Clarke & Buettcher 2009): each list contributes 1 / (K + rank).
+// It needs only ranks, so cosine similarities and BM25 scores never have to be put on one scale.
+export function fuseRRF(lists: Hit[][], k: number, K = 60): Hit[] {
+  const fused = new Map<string, Hit>();
+  for (const list of lists) {
+    list.forEach(({ chunk }, rank) => {
+      const prev = fused.get(chunk.id);
+      fused.set(chunk.id, { chunk, score: (prev?.score ?? 0) + 1 / (K + rank + 1) });
+    });
+  }
+  return [...fused.values()].sort((a, b) => b.score - a.score).slice(0, k);
+}
+
+// How deep each list goes before fusion; well past the 10 results shown.
+const FUSION_DEPTH = 100;
+
+export function searchHybrid(index: Index, keyword: KeywordIndex, query: string, vector: Float32Array, k: number, filters: Filters = {}): Hit[] {
+  return fuseRRF([searchDense(index, vector, FUSION_DEPTH, filters), searchKeyword(keyword, query, FUSION_DEPTH, filters)], k);
+}
+
+// ---------- dense search ----------
 
 // Vectors are L2-normalized, so cosine similarity is a dot product.
 export function searchDense(index: Index, query: Float32Array, k: number, filters: Filters = {}): Hit[] {

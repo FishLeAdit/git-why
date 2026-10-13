@@ -5,7 +5,8 @@
       "repo": "nnUNet",
       "since": "2022-01-01",
       "maxItems": null,
-      "examples": ["Why was the default patch size changed?", "Why was ResEnc added?", "Why did the data loading switch to blosc2?"]
+      "examples": ["Why was the default patch size changed?", "Why are saved nrrd segmentations so much smaller now?", "Why don't some datasets get a 3d_lowres configuration?"],
+      "answerThreshold": 0.736
     },
     {
       "owner": "huggingface",
@@ -13,6 +14,7 @@
       "since": "2022-01-01",
       "maxItems": null,
       "examples": ["Why was WebGPU support added?", "Why did the package move to @huggingface/transformers?", "Why was onnxruntime-web upgraded to 1.17?"],
+      "answerThreshold": null,
       "noise": {
         "botAuthors": ["hf-security-analysis[bot]", "hf-dependantbot-rollout[bot]"],
         "skipSubjects": [

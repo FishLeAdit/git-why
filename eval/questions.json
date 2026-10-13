@@ -1,0 +1,331 @@
+[
+  {
+    "id": "q01",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why did nnU-Net stop saving model checkpoints as pickle files?",
+    "gold": [
+      "commit-f0ffeba",
+      "pr-3011"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "commit: .pth is a pickle and torch.load(weights_only=False) runs any code in it; PR #3011: CVE-2025-32434, portability"
+  },
+  {
+    "id": "q02",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why did downloading the pretrained v1 models from Zenodo break?",
+    "gold": [
+      "pr-3017",
+      "issue-2876"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "PR #3017: forcing HTTP/1.0 made Zenodo return 404 instead of redirecting; issue #2876 is the report"
+  },
+  {
+    "id": "q03",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why did a second user get a permission error when training into a shared results folder?",
+    "gold": [
+      "pr-3016",
+      "issue-2882"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "PR #3016: shutil.copy also copies permission bits via chmod; issue #2882 is the report"
+  },
+  {
+    "id": "q04",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why could the same segmentation get different label boundaries after resampling with torch versus numpy?",
+    "gold": [
+      "commit-a89e0db"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "commit: even-factor resampling makes 50/50 ties that were broken by label value, differently on each path"
+  },
+  {
+    "id": "q05",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why were the foreground sampling coordinates moved out of each case's pickle file?",
+    "gold": [
+      "commit-82bcbb9"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "commit: the dataloader read and unpickled every coordinate to use one; dominated IO on many-class datasets"
+  },
+  {
+    "id": "q06",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why was writing the sampling store so slow on a cluster's parallel file system?",
+    "gold": [
+      "commit-9cbe213"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "commit: blosc2 pays ~16 ms per chunk on GPFS (vs 0.09 ms locally) when appending"
+  },
+  {
+    "id": "q07",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why do inference processes start up faster now?",
+    "gold": [
+      "commit-47766ae"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "commit: seaborn/pyplot/sklearn imported lazily; ~0.8 s saved per process"
+  },
+  {
+    "id": "q08",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why did computing Dice and the other evaluation metrics get faster?",
+    "gold": [
+      "commit-2edf346"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "commit: one confusion matrix per case instead of ~15 passes per class"
+  },
+  {
+    "id": "q09",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why did training on the CHAOS dataset put scans of the same patient into different folds?",
+    "gold": [
+      "commit-3ec44e4"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "commit: the split was saved as splits_final.pkl, which v2 does not read, so a random split was used"
+  },
+  {
+    "id": "q10",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why are saved nrrd segmentations so much smaller than they used to be?",
+    "gold": [
+      "pr-1720"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "PR #1720: SimpleITK writer compression turned on (20 MB vs 19 kB)"
+  },
+  {
+    "id": "q11",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why couldn't the DA5 trainer be used for multi-GPU training before?",
+    "gold": [
+      "pr-1788"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "PR #1788: lambdas in nnUNetTrainerDA5 blocked multi-GPU training"
+  },
+  {
+    "id": "q12",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why is it easier now to turn deep supervision off in a custom trainer?",
+    "gold": [
+      "pr-1740"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "PR #1740: deep supervision was half-static; now a self.enable_deep_supervision attribute"
+  },
+  {
+    "id": "q13",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why does nnU-Net check that unpacked .npy files can actually be read?",
+    "gold": [
+      "pr-1628"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "PR #1628: broken extractions only failed later, when the bad case was sampled"
+  },
+  {
+    "id": "q14",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why did intensity normalization become much faster on very large CT scans?",
+    "gold": [
+      "pr-1889"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "PR #1889: fewer allocations (astype copy=False, in-place ops), up to 20x faster on 512^3"
+  },
+  {
+    "id": "q15",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why was the code that creates the mixed-precision gradient scaler changed?",
+    "gold": [
+      "pr-2684"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "PR #2684: torch.cuda.amp.GradScaler is deprecated in favour of torch.GradScaler(\"cuda\")"
+  },
+  {
+    "id": "q16",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why did resolving all optional extras pull in torch<2.3 and numpy<2 on Linux?",
+    "gold": [
+      "pr-3043"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "PR #3043: the intel_macos extra pinned them without a platform marker"
+  },
+  {
+    "id": "q17",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why was the default patch size changed?",
+    "gold": [
+      "commit-e0137ed"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "commit subject: the 2D patch size was unintentionally capped at 512 with the default configuration"
+  },
+  {
+    "id": "q18",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why does nnunetv2 still depend on the imagecodecs package?",
+    "gold": [
+      "issue-2899",
+      "pr-2992"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "maintainer in #2899: needed for reading and writing compressed tif files; PR #2992 tried to remove it as unused"
+  },
+  {
+    "id": "q19",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why does nnU-Net resample images with cubic interpolation by default instead of linear?",
+    "gold": [
+      "issue-2082"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "maintainer in #2082: bicubic can give better results; switch to linear if CPU-bound, minimal drop"
+  },
+  {
+    "id": "q20",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why don't some datasets get a 3d_lowres configuration?",
+    "gold": [
+      "issue-1360"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "maintainer in #1360: if 3d_fullres already sees the whole image there is no point in 3d_lowres and the cascade"
+  },
+  {
+    "id": "q21",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Where does the gradient clipping value of 12 come from?",
+    "gold": [
+      "issue-1224"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "maintainer in #1224: optimized long ago; only there to prevent rare NaN problems"
+  },
+  {
+    "id": "q22",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why does the dataloader's sampling bounding box extend past the image borders?",
+    "gold": [
+      "issue-2025"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "maintainer in #2025: the initially sampled patch is larger than the training patch (refers to \"my response in the other issue\", possibly #2021)"
+  },
+  {
+    "id": "q23",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why did the benchmark trainer report \"Not enough VRAM\" on a GPU with plenty of memory?",
+    "gold": [
+      "pr-3020"
+    ],
+    "answerable": true,
+    "reviewed": true,
+    "evidence": "PR #3020: the logging swallowed the real error (a Triton/inductor failure)"
+  },
+  {
+    "id": "u01",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why did nnU-Net move from PyTorch to JAX?",
+    "gold": [],
+    "answerable": false,
+    "reviewed": true,
+    "evidence": "never happened; JAX only appears in an unrelated user error (#2180) and a portability remark in #3011"
+  },
+  {
+    "id": "u02",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why was TensorFlow support removed?",
+    "gold": [],
+    "answerable": false,
+    "reviewed": true,
+    "evidence": "nnU-Net never had TensorFlow support; only incidental mentions"
+  },
+  {
+    "id": "u03",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why was the default optimizer switched to AdamW?",
+    "gold": [],
+    "answerable": false,
+    "reviewed": true,
+    "evidence": "the default is still SGD; AdamW only appears in users' custom trainers (#2743, #2853)"
+  },
+  {
+    "id": "u04",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why was nnU-Net relicensed under the MIT license?",
+    "gold": [],
+    "answerable": false,
+    "reviewed": true,
+    "evidence": "no record mentions a licence change"
+  },
+  {
+    "id": "u05",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why was Windows support dropped?",
+    "gold": [],
+    "answerable": false,
+    "reviewed": true,
+    "evidence": "never dropped; Windows only appears in fixes such as disabling blosc2 memmap on Windows"
+  },
+  {
+    "id": "u06",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why was a web-based annotation tool added?",
+    "gold": [],
+    "answerable": false,
+    "reviewed": true,
+    "evidence": "no such tool in the history"
+  },
+  {
+    "id": "u07",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why was the residual encoder (ResEnc) architecture added?",
+    "gold": [],
+    "answerable": false,
+    "reviewed": true,
+    "evidence": "ResEnc presets exist, but no record says why: users only link to documentation/resenc_presets.md, which is not part of the indexed history"
+  },
+  {
+    "id": "u08",
+    "repo": "MIC-DKFZ/nnUNet",
+    "question": "Why did the preprocessed data format switch to blosc2?",
+    "gold": [],
+    "answerable": false,
+    "reviewed": true,
+    "evidence": "blosc2 appears in many fixes and install problems, but no record states the reason for adopting it"
+  }
+]

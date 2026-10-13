@@ -5,12 +5,12 @@
     "since": "2022-01-01",
     "count": 2600,
     "head": "6ae71b273b33d208e23549dc809d5d5b15deb6ac",
-    "built_at": "2026-10-13T19:40:28.970Z",
+    "built_at": "2026-10-13T20:24:34.896Z",
     "bytes": 6611517,
     "examples": [
       "Why was the default patch size changed?",
-      "Why was ResEnc added?",
-      "Why did the data loading switch to blosc2?"
+      "Why are saved nrrd segmentations so much smaller now?",
+      "Why don't some datasets get a 3d_lowres configuration?"
     ]
   },
   {
