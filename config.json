@@ -5,7 +5,7 @@
       "repo": "nnUNet",
       "since": "2022-01-01",
       "maxItems": null,
-      "examples": ["Why was the default patch size changed?", "Why are saved nrrd segmentations so much smaller now?", "Why don't some datasets get a 3d_lowres configuration?"],
+      "examples": ["Why did downloading the pretrained v1 models from Zenodo break?", "Why did nnU-Net stop saving model checkpoints as pickle files?", "Why don't some datasets get a 3d_lowres configuration?"],
       "answerThreshold": 0.736
     },
     {
@@ -30,6 +30,15 @@
   "dtype": "q8",
   "pooling": "cls",
   "topK": 10,
+  "llm": {
+    "model": "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+    "modelWithoutF16": "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+    "downloadMB": 1740,
+    "records": 4,
+    "recordChars": 1200,
+    "maxTokens": 250,
+    "temperature": 0
+  },
   "noise": {
     "botAuthors": ["dependabot[bot]", "pre-commit-ci[bot]", "renovate[bot]"],
     "dropBotComments": true,

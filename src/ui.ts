@@ -5,7 +5,7 @@ const TYPE_LABEL: Record<Chunk['type'], string> = { pr: 'PR', issue: 'Issue', co
 const SNIPPET_CHARS = 260;
 const FILES_SHOWN = 3;
 
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string): HTMLElementTagNameMap[K] {
+export function el<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;

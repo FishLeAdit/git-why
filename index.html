@@ -35,6 +35,10 @@
           <label class="toolbar-label" for="q">Question</label>
           <input id="q" class="field grow" type="search" name="q" autocomplete="off" placeholder="Why was the default patch size changed?" />
           <button type="submit" class="button">Search</button>
+          <span class="menu-anchor">
+            <button id="history-button" type="button" class="button" aria-haspopup="menu" aria-expanded="false" aria-controls="history-menu">History ▾</button>
+            <div id="history-menu" class="menu" role="menu" aria-label="Recent questions" hidden></div>
+          </span>
         </form>
 
         <fieldset id="filters" class="toolbar-row filters">
@@ -62,6 +66,11 @@
             Everything runs in your browser: no server, no API key.
           </p>
           <div class="examples"><span class="examples-label">Try:</span><span id="examples" aria-label="Example questions"></span></div>
+          <section id="answer" class="answer" aria-labelledby="answer-title" aria-live="polite" hidden>
+            <h2 id="answer-title" class="answer-title">Answer</h2>
+            <div id="answer-body" class="answer-body"></div>
+            <div id="answer-actions" class="answer-actions"></div>
+          </section>
           <ol id="results" class="results"></ol>
         </div>
       </main>

@@ -26,6 +26,15 @@ export type Config = {
   dtype: 'fp32' | 'fp16' | 'q8' | 'int8' | 'uint8' | 'q4' | 'bnb4' | 'q4f16';
   pooling: 'cls' | 'mean';
   topK: number;
+  llm: {
+    model: string; // WebLLM prebuilt model id (prebuiltAppConfig.model_list)
+    modelWithoutF16: string; // same model for GPUs without the shader-f16 feature
+    downloadMB: number; // approximate one-time download, shown before opting in
+    records: number; // top records given to the model
+    recordChars: number; // text per record in the prompt
+    maxTokens: number;
+    temperature: number;
+  };
   noise: NoiseRules;
 };
 

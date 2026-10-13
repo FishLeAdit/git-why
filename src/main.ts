@@ -1,6 +1,8 @@
 import './style.css';
 import { config } from './lib/config.ts';
 import { manifestMismatches, parseIndex, searchDense, type Chunk, type Filters, type Index, type Manifest } from './lib/retrieval.ts';
+import { initAnswers, onResults } from './answers.ts';
+import { addToHistory, initHistoryMenu } from './history.ts';
 import { $, renderExamples, renderHits, setBusy, setStatus, showWarning } from './ui.ts';
 import type { WorkerRequest, WorkerResponse } from './worker/embed.worker.ts';
 
@@ -79,6 +81,7 @@ let index: Index | null = null; // the current repo's index, once loaded
 let lastQuery: { text: string; vector: Float32Array } | null = null;
 let searchSeq = 0;
 let repoSeq = 0;
+let searchWaitingForIndex = false; // a question was asked before the repo's index finished loading
 
 function updateUrl() {
   const url = new URL(location.href);
@@ -99,14 +102,22 @@ function readFilters(): Filters {
 
 // Ranking a cached query vector is cheap, so filter and repo changes re-rank without re-embedding
 // (every repo is embedded with the same model, so one question vector works for all of them).
-function render() {
-  if (!index || !lastQuery) return;
+// "search" means a new question was asked (the answer step writes an answer); "rerank" means only
+// filters or the repo changed (any previous answer no longer matches the records).
+function render(trigger: 'search' | 'rerank' = 'rerank') {
+  if (!lastQuery) return;
+  if (!index) {
+    if (trigger === 'search') searchWaitingForIndex = true;
+    return;
+  }
   const filters = readFilters();
   const t0 = performance.now();
   const hits = searchDense(index, lastQuery.vector, config.topK, filters);
   renderHits(hits, filters);
   const ms = (performance.now() - t0).toFixed(0);
   setStatus(hits.length ? `Top ${hits.length} of ${index.chunks.length} records (${ms} ms)` : 'No records match these filters.');
+  const threshold = config.repos.find((r) => `${r.owner}/${r.repo}` === current?.name)?.answerThreshold ?? null;
+  onResults(lastQuery.text, hits, threshold, trigger);
 }
 
 async function search(question: string) {
@@ -125,8 +136,9 @@ async function search(question: string) {
     if (!vector || seq !== searchSeq) return; // a newer search started meanwhile
     lastQuery = { text: question, vector };
   }
+  addToHistory(question, current.name);
   updateUrl();
-  render(); // no-op until the current repo's index is loaded; selectRepo renders once it is
+  render('search'); // waits for the current repo's index if needed; selectRepo renders once it is
 }
 
 // ---------- repos ----------
@@ -169,8 +181,10 @@ async function selectRepo(repo: RepoEntry, notice?: string) {
   const footer = $('footer');
   footer.textContent = `${manifest.count.toLocaleString('en')} records${since} @ ${manifest.head.slice(0, 7)}`;
   footer.title = `Index: ${manifest.count} records from ${manifest.repo}${since} @ ${manifest.head.slice(0, 7)}, built ${manifest.built_at.slice(0, 10)} with ${manifest.model} (${manifest.dtype}).`;
-  if (lastQuery) render();
-  else if (pending.size === 0) setStatus(notice ?? (modelReady ? 'Ready. Ask a question.' : 'Index loaded. Fetching the embedding model…'));
+  if (lastQuery) {
+    render(searchWaitingForIndex ? 'search' : 'rerank');
+    searchWaitingForIndex = false;
+  } else if (pending.size === 0) setStatus(notice ?? (modelReady ? 'Ready. Ask a question.' : 'Index loaded. Fetching the embedding model…'));
 }
 
 // ---------- wiring ----------
@@ -180,7 +194,7 @@ $('search').addEventListener('submit', (e) => {
   e.preventDefault();
   search(input.value);
 });
-$('filters').addEventListener('input', render);
+$('filters').addEventListener('input', () => render('rerank'));
 $('repo').addEventListener('change', (e) => {
   const repo = repos.find((r) => r.key === (e.target as HTMLSelectElement).value);
   if (repo) selectRepo(repo);
@@ -190,6 +204,14 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     input.focus();
   }
+});
+
+initAnswers();
+initHistoryMenu((entry) => {
+  input.value = entry.q;
+  const repo = repos.find((r) => r.name === entry.repo);
+  if (repo && repo !== current) selectRepo(repo);
+  search(entry.q);
 });
 
 setStatus('Loading…');
