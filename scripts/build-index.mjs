@@ -15,7 +15,6 @@ const BODY_MAX = 800; // leave room for commit subjects and comments
 const COMMENT_MAX = 300;
 const FILES_MAX = 30;
 const EMBED_FILES = 10;
-const BATCH = 16;
 const MAINTAINER = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
 const LABEL = { pr: 'Pull request', issue: 'Issue', commit: 'Commit' };
 
@@ -80,12 +79,16 @@ function commentLines(number) {
 const stripTrailers = (body) => body.replace(/^[A-Za-z-]+-by: .*$/gim, '').trim();
 
 const unique = (xs) => [...new Set(xs)];
+const isNoiseSubject = (subject) => skipPatterns.some((re) => re.test(subject.trim()));
+// git gives local offsets ("+02:00"), GitHub gives "Z"; one format keeps string sorting/filtering correct.
+const utc = (date) => new Date(date).toISOString();
 
 // ---------- fold commits into the PR or issue they belong to ----------
 
 const prByNumber = new Map(pulls.map((p) => [p.number, p]));
 const issueByNumber = new Map(issues.map((i) => [i.number, i]));
-const merged = pulls.filter((p) => p.state === 'merged');
+// Oldest merge first: a commit listed in stacked PRs belongs to the PR that landed it first.
+const merged = pulls.filter((p) => p.state === 'merged').sort((a, b) => a.merged_at.localeCompare(b.merged_at));
 const owner = new Map(); // commit sha -> { kind: 'pr' | 'issue', number, how }
 const assign = (sha, kind, number, how) => owner.has(sha) || owner.set(sha, { kind, number, how });
 
@@ -118,7 +121,10 @@ for (const c of commits) {
   const key = `${o.kind}-${o.number}`;
   foldedInto.set(key, [...(foldedInto.get(key) ?? []), c]);
 }
-const commitLine = (label, list) => (list.length ? truncate(`${label}: ${list.map((c) => c.subject).join('; ')}`, 300) : null);
+const commitLine = (label, list) => {
+  const subjects = list.map((c) => c.subject).filter((s) => !isNoiseSubject(s));
+  return subjects.length ? truncate(`${label}: ${subjects.join('; ')}`, 300) : null;
+};
 
 // ---------- chunks ----------
 
@@ -128,7 +134,7 @@ const prChunks = pulls.map((p) => {
     id: `pr-${p.number}`,
     type: 'pr',
     title: p.title,
-    date: p.merged_at ?? p.created_at,
+    date: utc(p.merged_at ?? p.created_at),
     author: p.author,
     url: p.url,
     state: p.state,
@@ -143,7 +149,7 @@ const issueChunks = issues.map((i) => {
     id: `issue-${i.number}`,
     type: 'issue',
     title: i.title,
-    date: i.created_at,
+    date: utc(i.created_at),
     author: i.author,
     url: i.url,
     state: i.state,
@@ -156,7 +162,7 @@ const dropped = { bot: 0, subject: 0 };
 const commitChunks = commits
   .filter((c) => !owner.has(c.sha))
   .filter((c) => {
-    const reason = isNoiseBot(c.author) ? 'bot' : skipPatterns.some((re) => re.test(c.subject.trim())) ? 'subject' : null;
+    const reason = isNoiseBot(c.author) ? 'bot' : isNoiseSubject(c.subject) ? 'subject' : null;
     if (reason) dropped[reason]++;
     return !reason;
   })
@@ -164,7 +170,7 @@ const commitChunks = commits
     id: `commit-${c.sha.slice(0, 7)}`,
     type: 'commit',
     title: c.subject,
-    date: c.date,
+    date: utc(c.date),
     author: c.author,
     url: `https://github.com/${repoInfo.owner}/${repoInfo.repo}/commit/${c.sha}`,
     files: c.files.slice(0, FILES_MAX),
@@ -182,14 +188,14 @@ const embedText = (c) => [`${LABEL[c.type]}: ${c.title}`, c.files.length ? `File
 console.log(`embedding ${chunks.length} chunks with ${EMBED_MODEL} (${EMBED_DTYPE}, ${EMBED_POOLING} pooling)...`);
 const embed = await loadEmbedder();
 const vectors = new Float32Array(chunks.length * EMBED_DIM);
-// Similar lengths per batch means less padding.
-const order = chunks.map((c, i) => ({ i, text: embedText(c) })).sort((a, b) => a.text.length - b.text.length);
+// One text per call: q8 quantizes activations per batch, so batching makes a chunk's vector depend
+// on its batch-mates (cosine ~0.995 vs embedding it alone). Alone is deterministic, matches how the
+// browser embeds, and is no slower on CPU.
 const t0 = Date.now();
-for (let b = 0; b < order.length; b += BATCH) {
-  const batch = order.slice(b, b + BATCH);
-  const out = await embed(batch.map((x) => x.text));
-  batch.forEach((x, j) => vectors.set(out[j], x.i * EMBED_DIM));
-  if ((b / BATCH) % 20 === 0) process.stdout.write(`  ${Math.min(b + BATCH, order.length)}/${order.length}\r`);
+for (let i = 0; i < chunks.length; i++) {
+  const [vector] = await embed([embedText(chunks[i])]);
+  vectors.set(vector, i * EMBED_DIM);
+  if (i % 200 === 0) process.stdout.write(`  ${i}/${chunks.length}\r`);
 }
 const embedSeconds = (Date.now() - t0) / 1000;
 
@@ -227,6 +233,15 @@ for (let i = 0; i < index.manifest.count; i++) {
 const ids = new Set(index.chunks.map((c) => c.id));
 if (ids.size !== index.chunks.length) throw new Error('duplicate chunk ids');
 if (!(minNorm > 0.999 && maxNorm < 1.001)) throw new Error(`vector norms out of range: ${minNorm}..${maxNorm}`);
+// Each stored row must be its own chunk's vector: re-embed a spread of chunks and compare.
+for (const i of [0, Math.floor(chunks.length / 2), chunks.length - 1]) {
+  const [fresh] = await embed([embedText(index.chunks[i])]);
+  let cos = 0;
+  for (let d = 0; d < EMBED_DIM; d++) cos += fresh[d] * index.vectors[i * EMBED_DIM + d];
+  if (cos < 0.9999) throw new Error(`row ${i} (${index.chunks[i].id}) does not match a fresh embedding: cos ${cos}`);
+}
+const unsorted = index.chunks.findIndex((c, i) => i > 0 && c.date > index.chunks[i - 1].date);
+if (unsorted !== -1) throw new Error(`chunks not newest-first at ${index.chunks[unsorted].id}`);
 
 const byHow = commits.filter((c) => owner.has(c.sha)).reduce((m, c) => ((m[owner.get(c.sha).how] = (m[owner.get(c.sha).how] ?? 0) + 1), m), {});
 const kb = (name) => `${(read(name).length / 1024).toFixed(0)} KB`;
