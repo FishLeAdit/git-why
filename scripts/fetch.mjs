@@ -3,6 +3,7 @@
 //   PRs, issues, comments: GitHub REST API, list endpoints in bulk, every page cached to disk
 // Re-running reuses the cache; delete data/raw/ to fetch fresh.
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { config } from '../src/lib/config.ts';
@@ -45,10 +46,14 @@ async function api(url, attempt = 0) {
 
   if (res.ok) return res.json();
 
+  const body = await res.text();
   const retryAfter = Number(res.headers.get('retry-after'));
   const reset = Number(res.headers.get('x-ratelimit-reset'));
-  if ((res.status === 403 || res.status === 429) && attempt < 5) {
-    const waitMs = retryAfter ? retryAfter * 1000 : res.headers.get('x-ratelimit-remaining') === '0' ? reset * 1000 - Date.now() + 1000 : 60_000;
+  const exhausted = res.headers.get('x-ratelimit-remaining') === '0';
+  // A 403 is only worth waiting on when it's a rate limit; other 403s (e.g. no access) fail fast.
+  const rateLimited = res.status === 429 || (res.status === 403 && (exhausted || retryAfter || /rate limit/i.test(body)));
+  if (rateLimited && attempt < 5) {
+    const waitMs = retryAfter ? retryAfter * 1000 : exhausted ? reset * 1000 - Date.now() + 1000 : 60_000;
     console.warn(`rate limited (${res.status}); waiting ${Math.ceil(waitMs / 1000)}s`);
     await sleep(Math.max(waitMs, 1000));
     return api(url, attempt + 1);
@@ -57,12 +62,14 @@ async function api(url, attempt = 0) {
     await sleep(2 ** attempt * 1000);
     return api(url, attempt + 1);
   }
-  throw new Error(`GET ${url} -> ${res.status} ${(await res.text()).slice(0, 200)}`);
+  throw new Error(`GET ${url} -> ${res.status} ${body.slice(0, 200)}`);
 }
 
 // Fetch one page of `path` (relative to the repo API), or read it from the cache.
+// The cache key includes the query, so changing e.g. `since` never reuses pages fetched for another query.
 async function cachedPage(path, query, page) {
-  const dir = join(CACHE, path.replaceAll('/', '-'));
+  const key = query ? `${path.replaceAll('/', '-')}@${createHash('sha1').update(query).digest('hex').slice(0, 8)}` : path.replaceAll('/', '-');
+  const dir = join(CACHE, key);
   const file = join(dir, `${page}.json`);
   if (existsSync(file)) {
     stats.cached++;
@@ -98,6 +105,12 @@ async function mapLimit(items, limit, fn) {
 }
 
 const createdInRange = (item) => Date.parse(item.created_at) >= sinceTime;
+// Newest-first pages shift when items are opened between fetches (e.g. a run resumed days later),
+// which can repeat an item across a page boundary. Keep the first copy.
+const uniqueBy = (items, key) => {
+  const seen = new Set();
+  return items.filter((x) => !seen.has(x[key]) && seen.add(x[key]));
+};
 // Lists are sorted newest first, so stop once the oldest item on hand predates `since`.
 const pastSince = (items) => items.length > 0 && !createdInRange(items[items.length - 1]);
 
@@ -105,7 +118,7 @@ const pastSince = (items) => items.length > 0 && !createdInRange(items[items.len
 
 async function fetchPulls() {
   const pages = await paginate('pulls', 'state=all&sort=created&direction=desc', (all) => pastSince(all) || all.length >= cap);
-  const pulls = pages.filter(createdInRange).slice(0, cap);
+  const pulls = uniqueBy(pages, 'number').filter(createdInRange).slice(0, cap);
 
   const merged = pulls.filter((p) => p.merged_at);
   const files = await mapLimit(merged, CONCURRENCY, (p) => cachedPage(`pulls/${p.number}/files`, '', 1));
@@ -138,7 +151,7 @@ async function fetchIssues() {
   // The issues list also returns PRs (they carry a `pull_request` field); drop those.
   const isIssue = (i) => !i.pull_request;
   const pages = await paginate('issues', 'state=all&sort=created&direction=desc', (all) => pastSince(all) || all.filter(isIssue).length >= cap);
-  return pages
+  return uniqueBy(pages, 'number')
     .filter(isIssue)
     .filter(createdInRange)
     .slice(0, cap)
@@ -158,8 +171,13 @@ async function fetchIssues() {
 
 // ---------- Comments (bulk, grouped locally by issue/PR number) ----------
 
-async function fetchComments(wanted) {
-  const sinceQuery = since ? `&since=${encodeURIComponent(new Date(sinceTime).toISOString())}` : '';
+async function fetchComments(items) {
+  // A comment is never older than its issue/PR, so the oldest kept item bounds the comments we need.
+  // With maxItems set this keeps a first run small even when `since` is null.
+  if (items.length === 0) return { byNumber: {}, total: 0 };
+  const wanted = new Set(items.map((x) => x.number));
+  const oldest = Math.max(sinceTime, Math.min(...items.map((x) => Date.parse(x.created_at))));
+  const sinceQuery = Number.isFinite(oldest) ? `&since=${encodeURIComponent(new Date(oldest).toISOString())}` : '';
   const numberFromUrl = (url) => Number(url.slice(url.lastIndexOf('/') + 1));
 
   const issueComments = await paginate('issues/comments', `sort=created&direction=asc${sinceQuery}`);
@@ -191,7 +209,7 @@ function fetchCommits() {
     execFileSync('git', ['clone', '--bare', '--filter=blob:none', '--quiet', `https://github.com/${owner}/${repo}.git`, dir], { stdio: 'inherit' });
   }
   const head = git(dir, 'rev-parse', 'HEAD').trim();
-  const sinceArgs = since ? [`--since=${since}`] : [];
+  const sinceArgs = [...(since ? [`--since=${since}`] : []), ...(maxItems ? [`--max-count=${maxItems}`] : [])];
 
   // Record separator \x1e before each commit, unit separator \x1f between fields, \x1d ends the body.
   // --no-renames keeps git from lazily fetching blobs for rename detection.
@@ -226,7 +244,7 @@ const t0 = Date.now();
 const { head, commits, merges } = fetchCommits();
 const pulls = await fetchPulls();
 const issues = await fetchIssues();
-const { byNumber: comments, total: commentsSeen } = await fetchComments(new Set([...pulls, ...issues].map((x) => x.number)));
+const { byNumber: comments, total: commentsSeen } = await fetchComments([...pulls, ...issues]);
 
 writeJson(join(RAW, 'repo.json'), { owner, repo, head, since, maxItems, fetched_at: new Date().toISOString() });
 writeJson(join(RAW, 'commits.json'), commits);
