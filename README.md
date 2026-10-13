@@ -28,5 +28,5 @@ Needs `GITHUB_TOKEN` in `.env`. Without `--repo`, every repo in `config.json` is
 ```sh
 npm run fetch -- --repo huggingface/transformers.js
 npm run index -- --repo huggingface/transformers.js
-npm run query -- --repo huggingface/transformers.js "why is q8 the default on wasm"
+npm run query -- --repo huggingface/transformers.js "why was WebGPU support added"
 ```
