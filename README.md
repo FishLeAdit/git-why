@@ -4,7 +4,7 @@ Ask *why* an open-source repo changed and get an answer that links to the PRs, i
 
 Default target: [`MIC-DKFZ/nnUNet`](https://github.com/MIC-DKFZ/nnUNet) (set in `config.json`).
 
-> Work in progress. See [PLAN.md](PLAN.md) and [CHECKLIST.md](CHECKLIST.md).
+> Work in progress.
 
 ## Develop
 

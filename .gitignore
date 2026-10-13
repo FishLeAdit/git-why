@@ -13,3 +13,8 @@ data/raw
 .idea
 .vscode/*
 !.vscode/extensions.json
+
+# local notes, not part of the repo
+PLAN.md
+CHECKLIST.md
+claude.md
