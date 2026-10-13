@@ -1,23 +1,20 @@
 /* Windows 98 look, matching the portfolio at fishleadit.github.io: one maximized window with a white
    content pane. Bevels are inset box-shadows (light top-left, dark bottom-right; reversed = sunken). */
 
+/* Pixel recreation of MS Sans Serif, the Windows 98 UI font, by "lou" (FontStruct, CC BY-SA 3.0; licence
+   and readme next to the files, as the licence requires). It is drawn on an 11 px grid: render it at 11 px
+   with smoothing off, or it blurs. */
 @font-face {
-  font-family: 'Titillium Web';
+  font-family: 'Pixelated MS Sans Serif';
   font-weight: 400;
   font-display: swap;
-  src: url('./assets/fonts/titillium-web-400.woff2') format('woff2');
+  src: url('./assets/fonts/ms-sans-serif/ms_sans_serif.woff2') format('woff2');
 }
 @font-face {
-  font-family: 'Titillium Web';
-  font-weight: 600;
-  font-display: swap;
-  src: url('./assets/fonts/titillium-web-600.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Titillium Web';
+  font-family: 'Pixelated MS Sans Serif';
   font-weight: 700;
   font-display: swap;
-  src: url('./assets/fonts/titillium-web-700.woff2') format('woff2');
+  src: url('./assets/fonts/ms-sans-serif/ms_sans_serif_bold.woff2') format('woff2');
 }
 
 :root {
@@ -42,9 +39,14 @@
   --sunken: inset -1px -1px var(--hilite), inset 1px 1px var(--shadow), inset -2px -2px var(--light), inset 2px 2px var(--dark);
   --shallow: inset -1px -1px var(--hilite), inset 1px 1px var(--shadow);
 
-  font-family: 'Titillium Web', 'Segoe UI', Tahoma, sans-serif;
-  font-size: 14px;
-  line-height: 1.4;
+  font-family: 'Pixelated MS Sans Serif', 'MS Sans Serif', Tahoma, sans-serif;
+  font-size: 11px;
+  line-height: 1.45;
+  /* The recreation's space is narrower than the original's; 1px more keeps words apart ("v1 models"). */
+  word-spacing: 1px;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: never;
   color: var(--text);
   color-scheme: light;
 }
@@ -108,8 +110,8 @@ body.is-busy * {
   flex: none;
   gap: 4px;
   align-items: center;
-  height: 24px;
-  padding: 0 2px 0 4px;
+  height: 20px;
+  padding: 0 2px 0 3px;
   background: linear-gradient(to right, var(--title-start), var(--title-end));
   color: #fff;
 }
@@ -125,8 +127,8 @@ body.is-busy * {
   min-width: 0;
   margin: 0;
   overflow: hidden;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -139,8 +141,8 @@ body.is-busy * {
   display: grid;
   flex: none;
   place-items: center;
-  width: 22px;
-  height: 18px;
+  width: 16px;
+  height: 14px;
   background: var(--face);
   box-shadow: var(--raised);
 }
@@ -150,8 +152,8 @@ body.is-busy * {
 }
 
 .title-button svg {
-  width: 9px;
-  height: 8px;
+  width: 8px;
+  height: 7px;
 }
 
 /* ---------- controls ---------- */
@@ -161,7 +163,7 @@ body.is-busy * {
   align-items: center;
   justify-content: center;
   min-width: 75px;
-  height: 26px;
+  height: 23px;
   padding: 0 12px;
   font: inherit;
   color: var(--text);
@@ -186,13 +188,13 @@ body.is-busy * {
 
 .button-small {
   min-width: 0;
-  height: 24px;
+  height: 21px;
   padding: 0 8px;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .field {
-  height: 24px;
+  height: 21px;
   padding: 2px 5px;
   font: inherit;
   color: var(--text);
@@ -272,7 +274,7 @@ input[type='checkbox']:focus-visible {
   flex: 1;
   min-width: 0;
   max-width: 420px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .grow {
@@ -282,7 +284,7 @@ input[type='checkbox']:focus-visible {
 
 .filters {
   gap: 6px 14px;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .filter-group {
@@ -299,8 +301,8 @@ input[type='checkbox']:focus-visible {
 }
 
 .filters .field {
-  height: 22px;
-  font-size: 13px;
+  height: 21px;
+  font-size: 11px;
 }
 
 .file-filter .field {
@@ -353,10 +355,10 @@ input[type='checkbox']:focus-visible {
 }
 
 .example {
-  height: 24px;
+  height: 21px;
   padding: 0 8px;
   font: inherit;
-  font-size: 13px;
+  font-size: 11px;
   color: var(--text);
   background: var(--face);
   border: 0;
@@ -425,8 +427,8 @@ input[type='checkbox']:focus-visible {
 .state {
   flex: none;
   padding: 0 5px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   line-height: 18px;
   background: var(--face);
   box-shadow: var(--shallow);
@@ -452,7 +454,7 @@ input[type='checkbox']:focus-visible {
 .card-title {
   flex: 1;
   min-width: 0;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--link);
   overflow-wrap: anywhere;
 }
@@ -463,14 +465,14 @@ input[type='checkbox']:focus-visible {
 
 .score {
   flex: none;
-  font-size: 12px;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
 
 .card-meta {
   margin-top: 1px;
-  font-size: 12.5px;
+  font-size: 11px;
   color: var(--muted);
 }
 
@@ -488,7 +490,7 @@ input[type='checkbox']:focus-visible {
 
 .files code {
   padding: 0 4px;
-  font: 12px 'Courier New', Courier, monospace;
+  font: 11px 'Courier New', Courier, monospace;
   line-height: 18px;
   background: #f0f0f0;
   border: 1px solid var(--light);
@@ -496,7 +498,7 @@ input[type='checkbox']:focus-visible {
 }
 
 .files .more {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
 }
 
@@ -507,7 +509,7 @@ input[type='checkbox']:focus-visible {
   flex: none;
   gap: 2px;
   height: 22px;
-  font-size: 12.5px;
+  font-size: 11px;
 }
 
 .status-panel {
@@ -622,7 +624,7 @@ input[type='checkbox']:focus-visible {
   width: 100%;
   padding: 3px 10px 3px 8px;
   font: inherit;
-  font-size: 13px;
+  font-size: 11px;
   color: var(--text);
   text-align: left;
   background: none;
@@ -654,13 +656,13 @@ input[type='checkbox']:focus-visible {
 
 .menu-item-detail {
   flex: none;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
 }
 
 .menu-empty {
   padding: 4px 8px;
-  font-size: 13px;
+  font-size: 11px;
   color: var(--muted);
 }
 
@@ -690,8 +692,8 @@ input[type='checkbox']:focus-visible {
   left: 8px;
   margin: 0;
   padding: 0 4px;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   background: #fff;
 }
 
@@ -712,12 +714,12 @@ input[type='checkbox']:focus-visible {
 
 .answer-refusal {
   margin: 0 0 6px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .answer-note {
   margin: 0 0 6px;
-  font-size: 13px;
+  font-size: 11px;
   color: var(--muted);
 }
 
@@ -731,7 +733,7 @@ input[type='checkbox']:focus-visible {
 
 .answer-meta {
   margin: 6px 0 0;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
 }
 
@@ -754,8 +756,8 @@ input[type='checkbox']:focus-visible {
 }
 
 .cite {
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   white-space: nowrap;
 }
 

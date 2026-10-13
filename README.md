@@ -19,7 +19,7 @@ npm run dev
 
 ## Look
 
-A Windows 98 window, to match [my portfolio](https://fishleadit.github.io/). The styling is plain CSS in `src/style.css`. The Titillium Web font is under the SIL Open Font License (`src/assets/fonts/OFL.txt`), and the Windows 98 cursors come from the portfolio, which is built on [98.portfolio](https://github.com/AlexandreDresch/98.portfolio) by Alexandre Dresch.
+A Windows 98 window, to match [my portfolio](https://fishleadit.github.io/). The styling is plain CSS in `src/style.css`. The font is a pixel recreation of MS Sans Serif by "lou" ([FontStruct](https://fontstruct.com/fontstructions/show/1384746), CC BY-SA 3.0, as bundled by [98.css](https://github.com/jdan/98.css)); its licence and readme are in `src/assets/fonts/ms-sans-serif/`. The Windows 98 cursors come from the portfolio, which is built on [98.portfolio](https://github.com/AlexandreDresch/98.portfolio) by Alexandre Dresch.
 
 ## Rebuild an index
 
