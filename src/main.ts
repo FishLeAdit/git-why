@@ -1,7 +1,7 @@
 import './style.css';
 import { config } from './lib/config.ts';
 import { manifestMismatches, parseIndex, searchDense, type Chunk, type Filters, type Index, type Manifest } from './lib/retrieval.ts';
-import { $, renderExamples, renderHits, setStatus, showWarning } from './ui.ts';
+import { $, renderExamples, renderHits, setBusy, setStatus, showWarning } from './ui.ts';
 import type { WorkerRequest, WorkerResponse } from './worker/embed.worker.ts';
 
 // One entry per built index, written by build-index (public/data/repos.json).
@@ -116,10 +116,12 @@ async function search(question: string) {
   if (lastQuery?.text !== question) {
     if (modelError) return setStatus(`Search is unavailable: ${modelError}`);
     if (!modelReady) setStatus('Loading the embedding model. Your search will run as soon as it is ready.', 0);
+    setBusy(true);
     const vector = await embed(question).catch((err: Error) => {
       setStatus(`Search failed: ${err.message}`);
       return null;
     });
+    setBusy(false);
     if (!vector || seq !== searchSeq) return; // a newer search started meanwhile
     lastQuery = { text: question, vector };
   }
@@ -137,6 +139,9 @@ async function selectRepo(repo: RepoEntry, notice?: string) {
   $<HTMLSelectElement>('repo').value = repo.key;
   const link = $<HTMLAnchorElement>('repo-link');
   link.href = `https://github.com/${repo.name}`;
+  $('title-repo').textContent = ` – ${repo.name}`;
+  $('intro-repo').textContent = repo.name;
+  document.title = `git-why – ${repo.name}`;
   renderExamples(repo.examples, (q) => {
     input.value = q;
     search(q);
@@ -147,18 +152,23 @@ async function selectRepo(repo: RepoEntry, notice?: string) {
   setStatus(`Loading the ${repo.name} index (${(repo.bytes / 1e6).toFixed(1)} MB)…`);
 
   let loaded: Index;
+  setBusy(true);
   try {
     loaded = await loadIndex(repo.key);
   } catch (err) {
     if (seq === repoSeq) setStatus(`Could not load the ${repo.name} index: ${(err as Error).message}`);
     return;
+  } finally {
+    if (seq === repoSeq) setBusy(false);
   }
   if (seq !== repoSeq) return; // the user picked another repo meanwhile
   index = loaded;
   const { manifest } = loaded;
   showWarning(manifestMismatches(manifest));
   const since = repo.since ? ` since ${repo.since.slice(0, 10)}` : '';
-  $('footer').textContent = `Index: ${manifest.count} records from ${manifest.repo}${since} @ ${manifest.head.slice(0, 7)}, built ${manifest.built_at.slice(0, 10)} with ${manifest.model} (${manifest.dtype}).`;
+  const footer = $('footer');
+  footer.textContent = `${manifest.count.toLocaleString('en')} records${since} @ ${manifest.head.slice(0, 7)}`;
+  footer.title = `Index: ${manifest.count} records from ${manifest.repo}${since} @ ${manifest.head.slice(0, 7)}, built ${manifest.built_at.slice(0, 10)} with ${manifest.model} (${manifest.dtype}).`;
   if (lastQuery) render();
   else if (pending.size === 0) setStatus(notice ?? (modelReady ? 'Ready. Ask a question.' : 'Index loaded. Fetching the embedding model…'));
 }

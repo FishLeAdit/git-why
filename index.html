@@ -4,52 +4,76 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Ask why an open-source repo changed. Semantic search over its PRs, issues and commits, running entirely in your browser." />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%232f5bd3'/%3E%3Ctext x='16' y='22.5' text-anchor='middle' font-family='system-ui,sans-serif' font-size='18' font-weight='700' fill='white'%3E%3F%3C/text%3E%3C/svg%3E" />
+    <meta name="theme-color" content="#010f80" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Cpath fill='%23fff' stroke='%23000' d='M2.5 1.5h7l3 3v10h-10z'/%3E%3Cpath fill='%23c0c0c0' stroke='%23000' d='M9.5 1.5v3h3'/%3E%3Cpath stroke='%23808080' d='M4 6h5M4 8h4'/%3E%3Ccircle cx='9' cy='10' r='2.5' fill='%2380c0ff' stroke='%23010f80'/%3E%3Cpath stroke='%23010f80' stroke-width='2' d='M11 12l3 3'/%3E%3C/svg%3E" />
     <title>git-why</title>
   </head>
   <body>
-    <main class="page">
-      <header class="masthead">
-        <h1>git-why</h1>
-        <p class="tagline">
-          Ask why
-          <select id="repo" aria-label="Repository"></select>
-          changed<a id="repo-link" class="repo-link" target="_blank" rel="noopener" title="Open the repository on GitHub">↗</a>. Results link to the
-          PRs, issues and commits behind it. Everything runs in your browser: no server, no API key.
-        </p>
+    <div class="window">
+      <header class="title-bar">
+        <svg class="title-icon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+          <path fill="#fff" stroke="#000" d="M2.5 1.5h7l3 3v10h-10z" />
+          <path fill="#c0c0c0" stroke="#000" d="M9.5 1.5v3h3" />
+          <path stroke="#808080" d="M4 6h5M4 8h4" />
+          <circle cx="9" cy="10" r="2.5" fill="#80c0ff" stroke="#010f80" />
+          <path stroke="#010f80" stroke-width="2" d="M11 12l3 3" />
+        </svg>
+        <h1 class="title-text">git-why<span id="title-repo"></span></h1>
+        <a id="close" class="title-button" href="https://fishleadit.github.io/" title="Close (back to the portfolio)" aria-label="Close and go back to the portfolio">
+          <svg viewBox="0 0 8 7" aria-hidden="true"><path d="M1 0.5l6 6M7 0.5l-6 6" stroke="#000" stroke-width="1.7" /></svg>
+        </a>
       </header>
 
-      <div id="warning" class="warning" role="alert" hidden></div>
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <label class="toolbar-label" for="repo">Address</label>
+          <select id="repo" class="field address"></select>
+          <a id="repo-link" class="button button-small" target="_blank" rel="noopener" title="Open the repository on GitHub">GitHub ↗</a>
+        </div>
 
-      <form id="search" class="search" role="search">
-        <input id="q" type="search" name="q" autocomplete="off" aria-label="Your question" placeholder="Why was the default patch size changed?" />
-        <button type="submit">Search</button>
-      </form>
-      <div id="examples" class="examples" aria-label="Example questions"></div>
+        <form id="search" class="toolbar-row" role="search">
+          <label class="toolbar-label" for="q">Question</label>
+          <input id="q" class="field grow" type="search" name="q" autocomplete="off" placeholder="Why was the default patch size changed?" />
+          <button type="submit" class="button">Search</button>
+        </form>
 
-      <fieldset id="filters" class="filters">
-        <legend class="visually-hidden">Filters</legend>
-        <span class="filter-group">
-          <label><input type="checkbox" name="type" value="pr" checked /> PRs</label>
-          <label><input type="checkbox" name="type" value="issue" checked /> Issues</label>
-          <label><input type="checkbox" name="type" value="commit" checked /> Commits</label>
-        </span>
-        <span class="filter-group">
-          <label>From <input type="date" name="from" /></label>
-          <label>To <input type="date" name="to" /></label>
-        </span>
-        <label class="file-filter">File <input type="text" name="file" placeholder="e.g. planner" autocomplete="off" /></label>
-      </fieldset>
-
-      <div class="status" role="status" aria-live="polite">
-        <span id="status-text"></span>
-        <progress id="progress" max="1" hidden></progress>
+        <fieldset id="filters" class="toolbar-row filters">
+          <legend class="visually-hidden">Filters</legend>
+          <span class="filter-group">
+            <label class="check"><input type="checkbox" name="type" value="pr" checked /> PRs</label>
+            <label class="check"><input type="checkbox" name="type" value="issue" checked /> Issues</label>
+            <label class="check"><input type="checkbox" name="type" value="commit" checked /> Commits</label>
+          </span>
+          <span class="separator" aria-hidden="true"></span>
+          <span class="filter-group">
+            <label>From <input class="field" type="date" name="from" /></label>
+            <label>To <input class="field" type="date" name="to" /></label>
+          </span>
+          <span class="separator" aria-hidden="true"></span>
+          <label class="file-filter">File <input class="field" type="text" name="file" placeholder="e.g. planner" autocomplete="off" /></label>
+        </fieldset>
       </div>
 
-      <ol id="results" class="results"></ol>
+      <main class="content">
+        <div class="content-inner">
+          <div id="warning" class="message-box" role="alert" hidden></div>
+          <p class="intro">
+            Ask why <strong id="intro-repo">a repository</strong> changed. Results link to the PRs, issues and commits behind it.
+            Everything runs in your browser: no server, no API key.
+          </p>
+          <div class="examples"><span class="examples-label">Try:</span><span id="examples" aria-label="Example questions"></span></div>
+          <ol id="results" class="results"></ol>
+        </div>
+      </main>
 
-      <footer id="footer" class="footer"></footer>
-    </main>
+      <footer class="status-bar">
+        <div class="status-panel status-main" role="status" aria-live="polite"><span id="status-text"></span></div>
+        <div id="progress-panel" class="status-panel progress-panel" hidden>
+          <div class="progress"><div id="progress" class="progress-fill"></div></div>
+        </div>
+        <div id="footer" class="status-panel status-info"></div>
+      </footer>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

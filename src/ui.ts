@@ -16,15 +16,21 @@ export const $ = <T extends HTMLElement>(id: string) => document.getElementById(
 
 export function setStatus(text: string, progress?: number) {
   $('status-text').textContent = text;
-  const bar = $<HTMLProgressElement>('progress');
-  bar.hidden = progress === undefined;
-  if (progress !== undefined) bar.value = progress;
+  $('progress-panel').hidden = progress === undefined;
+  if (progress !== undefined) $('progress').style.width = `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%`;
+}
+
+// The Windows 98 hourglass cursor while the page is waiting on something.
+export function setBusy(busy: boolean) {
+  document.body.classList.toggle('is-busy', busy);
 }
 
 export function showWarning(lines: string[]) {
   const box = $('warning');
   box.hidden = lines.length === 0;
-  box.replaceChildren(el('strong', '', 'The index was built with a different embedding setup, so results will be wrong.'), ...lines.map((l) => el('div', '', l)));
+  const body = el('div');
+  body.append(el('strong', '', 'The index was built with a different embedding setup, so results will be wrong.'), ...lines.map((l) => el('div', '', l)));
+  box.replaceChildren(body);
 }
 
 export function renderExamples(questions: string[], onPick: (q: string) => void) {

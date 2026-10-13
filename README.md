@@ -17,7 +17,13 @@ npm install
 npm run dev
 ```
 
-Rebuild an index (needs `GITHUB_TOKEN` in `.env`; without `--repo`, every repo in `config.json`):
+## Look
+
+A Windows 98 window, to match [my portfolio](https://fishleadit.github.io/). The styling is plain CSS in `src/style.css`. The Titillium Web font is under the SIL Open Font License (`src/assets/fonts/OFL.txt`), and the Windows 98 cursors come from the portfolio, which is built on [98.portfolio](https://github.com/AlexandreDresch/98.portfolio) by Alexandre Dresch.
+
+## Rebuild an index
+
+Needs `GITHUB_TOKEN` in `.env`. Without `--repo`, every repo in `config.json` is processed.
 
 ```sh
 npm run fetch -- --repo huggingface/transformers.js
