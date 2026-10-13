@@ -1,8 +1,29 @@
 {
-  "owner": "MIC-DKFZ",
-  "repo": "nnUNet",
-  "since": "2022-01-01",
-  "maxItems": null,
+  "repos": [
+    {
+      "owner": "MIC-DKFZ",
+      "repo": "nnUNet",
+      "since": "2022-01-01",
+      "maxItems": null,
+      "examples": ["Why was the default patch size changed?", "Why was ResEnc added?", "Why did the data loading switch to blosc2?"]
+    },
+    {
+      "owner": "huggingface",
+      "repo": "transformers.js",
+      "since": "2022-01-01",
+      "maxItems": null,
+      "examples": ["Why was WebGPU support added?", "Why did the package move to @huggingface/transformers?", "Why was onnxruntime-web upgraded to 1.17?"],
+      "noise": {
+        "botAuthors": ["hf-security-analysis[bot]", "hf-dependantbot-rollout[bot]"],
+        "skipSubjects": [
+          "^\\[version\\] update to v?\\d[\\d.]*( \\(#\\d+\\))?$",
+          "^bump versions$",
+          "^update (readme\\.md|package-lock\\.json|package\\.json|dist files)$",
+          "^formatting$"
+        ]
+      }
+    }
+  ],
   "model": "Xenova/bge-small-en-v1.5",
   "dtype": "q8",
   "pooling": "cls",

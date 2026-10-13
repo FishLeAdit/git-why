@@ -72,6 +72,22 @@ a {
   color: var(--muted);
 }
 
+.tagline select {
+  max-width: 100%;
+  padding: 0.1rem 0.3rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.repo-link {
+  margin-left: 0.15rem;
+  text-decoration: none;
+}
+
 .warning {
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;

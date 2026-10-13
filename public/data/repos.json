@@ -1,0 +1,30 @@
+[
+  {
+    "key": "MIC-DKFZ__nnUNet",
+    "name": "MIC-DKFZ/nnUNet",
+    "since": "2022-01-01",
+    "count": 2600,
+    "head": "6ae71b273b33d208e23549dc809d5d5b15deb6ac",
+    "built_at": "2026-10-13T19:40:28.970Z",
+    "bytes": 6611517,
+    "examples": [
+      "Why was the default patch size changed?",
+      "Why was ResEnc added?",
+      "Why did the data loading switch to blosc2?"
+    ]
+  },
+  {
+    "key": "huggingface__transformers.js",
+    "name": "huggingface/transformers.js",
+    "since": "2022-01-01",
+    "count": 2092,
+    "head": "511bb61a7c46b73e33f1af3fb308fbd1afe98c02",
+    "built_at": "2026-10-13T19:46:49.117Z",
+    "bytes": 5551116,
+    "examples": [
+      "Why was WebGPU support added?",
+      "Why did the package move to @huggingface/transformers?",
+      "Why was onnxruntime-web upgraded to 1.17?"
+    ]
+  }
+]
