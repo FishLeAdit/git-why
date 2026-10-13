@@ -1,0 +1,10 @@
+{
+  "model": "Xenova/bge-small-en-v1.5",
+  "dtype": "q8",
+  "pooling": "cls",
+  "dim": 384,
+  "count": 2600,
+  "repo": "MIC-DKFZ/nnUNet",
+  "head": "6ae71b273b33d208e23549dc809d5d5b15deb6ac",
+  "built_at": "2026-10-13T18:37:33.289Z"
+}

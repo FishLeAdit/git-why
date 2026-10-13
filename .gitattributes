@@ -1,0 +1,2 @@
+# Never let line-ending conversion touch the float vectors.
+*.bin binary

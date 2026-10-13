@@ -5,9 +5,18 @@
   "maxItems": null,
   "model": "Xenova/bge-small-en-v1.5",
   "dtype": "q8",
+  "pooling": "cls",
   "topK": 10,
   "noise": {
-    "botAuthors": ["dependabot[bot]", "github-actions[bot]", "pre-commit-ci[bot]"],
-    "skipSubjects": ["^Merge (branch|remote-tracking branch) ", "^(bump|release) (version )?v?\\d", "^v?\\d+\\.\\d+(\\.\\d+)?$"]
+    "botAuthors": ["dependabot[bot]", "pre-commit-ci[bot]", "renovate[bot]"],
+    "dropBotComments": true,
+    "skipSubjects": [
+      "^merge$",
+      "^(bump|version bump|bump version( for release)?|bump to v?\\d[\\d.]*|bump [\\w.-]+( version)?)$",
+      "^v?\\d+\\.\\d+(\\.\\d+)?( release)?$",
+      "^(wip|stuff|minor stuff|minor changes|cleanup|debugging|initial|final|finished|runs|text|comment|imports|fix imports|pep8|whoopsies|no print)[.!?]*$",
+      "^(bug ?fix(es)?|bugfox|bugfozx|fix(ed|es)?|typos?|fix(ed)? typos?|doc|docs|more doc)[.!?]*$",
+      "^\\.+$"
+    ]
   }
 }

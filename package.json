@@ -12,10 +12,14 @@
     "preview": "vite preview",
     "fetch": "node --env-file-if-exists=.env --experimental-strip-types --disable-warning=ExperimentalWarning scripts/fetch.mjs",
     "index": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/build-index.mjs",
+    "query": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/query.mjs",
     "eval": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/eval.mjs"
   },
   "devDependencies": {
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.3.1"
   }
 }

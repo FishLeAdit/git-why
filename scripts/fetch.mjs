@@ -120,9 +120,14 @@ async function fetchPulls() {
   const pages = await paginate('pulls', 'state=all&sort=created&direction=desc', (all) => pastSince(all) || all.length >= cap);
   const pulls = uniqueBy(pages, 'number').filter(createdInRange).slice(0, cap);
 
+  // For merged PRs: changed file names, and the PR's commit SHAs so build-index can fold
+  // fast-forwarded PRs (no merge commit, no "#N" in the subject). First page only: files are capped
+  // at ~30 downstream, and PRs with >100 commits are rare.
   const merged = pulls.filter((p) => p.merged_at);
   const files = await mapLimit(merged, CONCURRENCY, (p) => cachedPage(`pulls/${p.number}/files`, '', 1));
+  const prCommits = await mapLimit(merged, CONCURRENCY, (p) => cachedPage(`pulls/${p.number}/commits`, '', 1));
   const filesByPr = new Map(merged.map((p, i) => [p.number, files[i].map((f) => f.filename)]));
+  const commitsByPr = new Map(merged.map((p, i) => [p.number, prCommits[i].map((c) => c.sha)]));
 
   return pulls.map((p) => ({
     number: p.number,
@@ -142,6 +147,7 @@ async function fetchPulls() {
     labels: p.labels.map((l) => l.name),
     url: p.html_url,
     files: filesByPr.get(p.number) ?? [],
+    commits: commitsByPr.get(p.number) ?? [],
   }));
 }
 
@@ -189,10 +195,10 @@ async function fetchComments(items) {
     (byNumber[number] ??= []).push(comment);
   };
   for (const c of issueComments) {
-    add(numberFromUrl(c.issue_url), { kind: 'issue', author: c.user?.login ?? 'ghost', created_at: c.created_at, body: c.body ?? '' });
+    add(numberFromUrl(c.issue_url), { kind: 'issue', author: c.user?.login ?? 'ghost', association: c.author_association, created_at: c.created_at, body: c.body ?? '' });
   }
   for (const c of reviewComments) {
-    add(numberFromUrl(c.pull_request_url), { kind: 'review', author: c.user?.login ?? 'ghost', created_at: c.created_at, body: c.body ?? '', path: c.path });
+    add(numberFromUrl(c.pull_request_url), { kind: 'review', author: c.user?.login ?? 'ghost', association: c.author_association, created_at: c.created_at, body: c.body ?? '', path: c.path });
   }
   for (const list of Object.values(byNumber)) list.sort((a, b) => a.created_at.localeCompare(b.created_at));
   return { byNumber, total: issueComments.length + reviewComments.length };
